@@ -2,7 +2,12 @@ package org.example.handlers;
 
 import org.example.Configuration;
 import org.example.commands.StartCommands;
-import org.example.keyboards.Keyboard;
+import org.example.keyboards.StartKeyboard;
+import org.example.model.entity.Event;
+import org.example.model.entity.Reminder;
+import org.example.parsers.KudaGoParser;
+import org.example.repository.EventRepository;
+import org.example.service.EventService;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -43,7 +48,7 @@ public class TelegramRequestHandler extends TelegramLongPollingBot {
                     SendMessage sendMessage = new SendMessage();
                     sendMessage.setChatId(chatId);
 
-                    var keyboard = new Keyboard();
+                    var keyboard = new StartKeyboard();
                     sendMessage.setText("Выберите действие:");
                     sendMessage.setReplyMarkup(keyboard.getKeyboard());
 
@@ -51,6 +56,40 @@ public class TelegramRequestHandler extends TelegramLongPollingBot {
                         execute(sendMessage);
                     } catch (TelegramApiException e) {
                         throw new RuntimeException(e);
+                    }
+                    if (text.startsWith("/task")) {
+
+                    }
+                    if (text.startsWith("/checklist")) {
+
+                    }
+                    if (text.startsWith("/reminder")) {
+
+                    }
+                    if (text.startsWith("/plans")) {
+
+                    }
+                    if (text.startsWith("/events")) {
+                        historyOfMessages.get(chatId).add(text);
+                        String[] args = text.split(" ");
+                        String city = String.valueOf(Integer.parseInt(args[1]));
+                        Integer numPages = Integer.parseInt(args[2]);
+
+                        List<Event> events = KudaGoParser.parseEvents(city, numPages);
+                        EventService.saveAll(events);
+                    }else{
+                        List<String> list = historyOfMessages.get(chatId);
+
+                        if(list == null) {
+                            historyOfMessages.put(chatId, new ArrayList<>());
+                            list = historyOfMessages.get(chatId);
+                        }
+                        list.add(text);
+                        List<Event> all = EventService.getAll();
+
+                        for(Event event:all) {
+                            sendMessage(event.getFormattedAdvertisementInfo(), chatId);
+                        }
                     }
                 } else if (text.startsWith("/calendar")) {
                     sendCalendar(chatId);
@@ -77,10 +116,14 @@ public class TelegramRequestHandler extends TelegramLongPollingBot {
                     e.printStackTrace();
                 }
             } else if (callData.startsWith("action_reminder_")) {
-                String selectedDate = callData.substring(15);
+                String selectedDate = callData.substring(16);
                 createReminder(selectedDate, String.valueOf(chatId));
+            } else if (callData.startsWith("reminder_text_")) {
+                String reminderText = callData.substring(14);
+                String selectedDate;// = получить выбранную дату
+                        //saveReminder(reminderText, selectedDate, String.valueOf(chatId));
             } else if (callData.startsWith("action_task_")) {
-                String selectedDate = callData.substring(11);
+                String selectedDate = callData.substring(12);
                 createTask(selectedDate, String.valueOf(chatId));
             }
         }
@@ -186,7 +229,9 @@ public class TelegramRequestHandler extends TelegramLongPollingBot {
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
         message.setText("Введите текст напоминания для даты " + selectedDate + ":");
-        //
+
+//        String remainder = message.getText();
+//        message.setText("Напоминаие : " + remainder + "добавлено для даты " + selectedDate);
         try {
             execute(message);
         } catch (TelegramApiException e) {
@@ -194,6 +239,21 @@ public class TelegramRequestHandler extends TelegramLongPollingBot {
         }
     }
 
+    private void saveReminder(String reminderText, String selectedDate, String chatId) {
+        // выполнить сохранение напоминания в бд
+//        Reminder reminder = new Reminder(reminderText, selectedDate, chatId);
+//        reminderRepository.save(reminder);
+
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText("Напоминание \"" + reminderText + "\" добавлено для даты " + selectedDate);
+
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
     private void createTask(String selectedDate, String chatId) {
         //
         SendMessage message = new SendMessage();

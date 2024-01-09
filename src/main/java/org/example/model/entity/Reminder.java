@@ -1,9 +1,16 @@
 package org.example.model.entity;
 
-import java.time.LocalDate;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+import java.time.LocalDate;
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Reminder {
-    private String reminderId;
-    private String description;
-    private LocalDate time;
+    private String date;
+    private String text;
 }

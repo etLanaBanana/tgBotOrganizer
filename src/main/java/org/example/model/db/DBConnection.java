@@ -1,6 +1,5 @@
 package org.example.model.db;
 
-import lombok.Getter;
 import lombok.Setter;
 import org.example.Configuration;
 import org.slf4j.Logger;
@@ -8,11 +7,11 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class DBConnection {
     @Setter
-    @Getter
     private Connection connection;
     private Logger logger = LoggerFactory.getLogger(DBConnection.class);
 
@@ -26,11 +25,23 @@ public class DBConnection {
         }
     }
 
+    public Connection getConnection() {
+        return connection;
+    }
     private static DBConnection instance = null;
     public static DBConnection getInstance() {
         if(instance == null) {
             instance = new DBConnection();
         }
         return instance;
+    }
+    public void executeQuery() {
+        ResultSet resultSet = null;
+        try {
+            resultSet = connection.prepareStatement(" ").executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        System.out.println(resultSet);
     }
 }
