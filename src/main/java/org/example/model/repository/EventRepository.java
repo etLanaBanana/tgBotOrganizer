@@ -1,4 +1,4 @@
-package org.example.repository;
+package org.example.model.repository;
 
 import lombok.Getter;
 import org.example.model.entity.Event;

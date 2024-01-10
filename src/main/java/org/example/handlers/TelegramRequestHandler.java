@@ -1,36 +1,33 @@
 package org.example.handlers;
 
+import lombok.SneakyThrows;
 import org.example.Configuration;
+import org.example.action.*;
 import org.example.commands.StartCommands;
-import org.example.keyboards.StartKeyboard;
-import org.example.model.entity.Event;
-import org.example.model.entity.Reminder;
-import org.example.parsers.KudaGoParser;
-import org.example.repository.EventRepository;
-import org.example.service.EventService;
+import org.example.keyboards.CalendarCallBack;
+import org.example.model.repository.ReminderRepository;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.TextStyle;
 import java.util.*;
+
+import static org.example.action.StartAction.startAction;
+import static org.example.keyboards.CalendarCallBack.calendarCallBack;
+import static org.example.keyboards.CalendarKeyboard.sendCalendar;
 
 public class TelegramRequestHandler extends TelegramLongPollingBot {
     private Map<String, List<String>> historyOfMessages = new HashMap<>();
+    private ReminderRepository remainderRepository;
 
     public void init() throws TelegramApiException {
         this.execute(new SetMyCommands(StartCommands.init(), new BotCommandScopeDefault(), null));
     }
 
+    @SneakyThrows
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage()) {
@@ -45,51 +42,22 @@ public class TelegramRequestHandler extends TelegramLongPollingBot {
                 historyOfMessages.put(chatId, chatHistory);
 
                 if (text.startsWith("/start")) {
-                    SendMessage sendMessage = new SendMessage();
-                    sendMessage.setChatId(chatId);
+                    startAction(chatId);
 
-                    var keyboard = new StartKeyboard();
-                    sendMessage.setText("Выберите действие:");
-                    sendMessage.setReplyMarkup(keyboard.getKeyboard());
-
-                    try {
-                        execute(sendMessage);
-                    } catch (TelegramApiException e) {
-                        throw new RuntimeException(e);
-                    }
                     if (text.startsWith("/task")) {
-
+                        TaskAction.tackAction(chatId);
                     }
                     if (text.startsWith("/checklist")) {
-
+                        ChecklistAction.checklistAction(chatId);
                     }
                     if (text.startsWith("/reminder")) {
-
+                        ReminderAction.remainderAction(chatId);
                     }
                     if (text.startsWith("/plans")) {
-
+                        PlansAction.plansAction(chatId);
                     }
                     if (text.startsWith("/events")) {
-                        historyOfMessages.get(chatId).add(text);
-                        String[] args = text.split(" ");
-                        String city = String.valueOf(Integer.parseInt(args[1]));
-                        Integer numPages = Integer.parseInt(args[2]);
-
-                        List<Event> events = KudaGoParser.parseEvents(city, numPages);
-                        EventService.saveAll(events);
-                    }else{
-                        List<String> list = historyOfMessages.get(chatId);
-
-                        if(list == null) {
-                            historyOfMessages.put(chatId, new ArrayList<>());
-                            list = historyOfMessages.get(chatId);
-                        }
-                        list.add(text);
-                        List<Event> all = EventService.getAll();
-
-                        for(Event event:all) {
-                            sendMessage(event.getFormattedAdvertisementInfo(), chatId);
-                        }
+                        EventsAction.eventsAction(chatId);
                     }
                 } else if (text.startsWith("/calendar")) {
                     sendCalendar(chatId);
@@ -98,34 +66,7 @@ public class TelegramRequestHandler extends TelegramLongPollingBot {
                 }
             }
         } else if (update.hasCallbackQuery()) {
-            var query = update.getCallbackQuery();
-            String callData = query.getData();
-            Long chatId = query.getMessage().getChatId();
-
-            if (callData.startsWith("date_")) {
-                String selectedDate = callData.substring(5);
-                createAction(selectedDate, String.valueOf(chatId));
-                SendMessage deleteInlineKeyboard = new SendMessage();
-                deleteInlineKeyboard.setChatId(chatId);
-                deleteInlineKeyboard.setText("Выберите действие:");
-                deleteInlineKeyboard.setReplyMarkup(new ReplyKeyboardRemove());
-
-                try {
-                    execute(deleteInlineKeyboard);
-                } catch (TelegramApiException e) {
-                    e.printStackTrace();
-                }
-            } else if (callData.startsWith("action_reminder_")) {
-                String selectedDate = callData.substring(16);
-                createReminder(selectedDate, String.valueOf(chatId));
-            } else if (callData.startsWith("reminder_text_")) {
-                String reminderText = callData.substring(14);
-                String selectedDate;// = получить выбранную дату
-                        //saveReminder(reminderText, selectedDate, String.valueOf(chatId));
-            } else if (callData.startsWith("action_task_")) {
-                String selectedDate = callData.substring(12);
-                createTask(selectedDate, String.valueOf(chatId));
-            }
+            CalendarCallBack.calendarCallBack(update, remainderRepository);
         }
     }
 
@@ -146,154 +87,6 @@ public class TelegramRequestHandler extends TelegramLongPollingBot {
         SendMessage message = new SendMessage();
         message.setChatId(chatId);
         message.setText(string);
-
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void sendCalendar(String chatId) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText("Выберите нужную дату:");
-
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-
-
-        List<InlineKeyboardButton> daysOfWeekRow = new ArrayList<>();
-        DayOfWeek[] daysOfWeek = DayOfWeek.values();
-        DayOfWeek currentDayOfWeek = LocalDate.now().getDayOfWeek();
-
-
-        DayOfWeek[] daysOfWeekFromCurrent = Arrays.copyOfRange(daysOfWeek, currentDayOfWeek.getValue() - 1, daysOfWeek.length);
-
-        for (DayOfWeek dayOfWeek : daysOfWeekFromCurrent) {
-            InlineKeyboardButton dayOfWeekButton = new InlineKeyboardButton();
-            dayOfWeekButton.setText(dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()));
-            dayOfWeekButton.setCallbackData("day_" + dayOfWeek.getValue());
-            daysOfWeekRow.add(dayOfWeekButton);
-        }
-
-        if (currentDayOfWeek.getValue() > 1) {
-            DayOfWeek[] daysOfWeekBeforeCurrent = Arrays.copyOfRange(daysOfWeek, 0, currentDayOfWeek.getValue() - 1);
-
-            for (DayOfWeek dayOfWeek : daysOfWeekBeforeCurrent) {
-                InlineKeyboardButton dayOfWeekButton = new InlineKeyboardButton();
-                dayOfWeekButton.setText(dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault()));
-                dayOfWeekButton.setCallbackData("day_" + dayOfWeek.getValue());
-                daysOfWeekRow.add(dayOfWeekButton);
-            }
-        }
-
-        rows.add(0, daysOfWeekRow);
-
-        LocalDate currentDate = LocalDate.now();
-        String currentMonthYear = currentDate.format(DateTimeFormatter.ofPattern("yyyy MMMM"));
-
-        InlineKeyboardButton monthYearButton = new InlineKeyboardButton();
-        monthYearButton.setText(currentMonthYear);
-        monthYearButton.setCallbackData("current_month_year");
-
-        List<InlineKeyboardButton> monthYearRow = new ArrayList<>();
-        monthYearRow.add(monthYearButton);
-
-        rows.add(0, monthYearRow);
-        for (int i = 0; i < 5; i++) {
-            List<InlineKeyboardButton> row = new ArrayList<>();
-            for (int j = 0; j < 7; j++) {
-                LocalDate date = currentDate.plusDays(i * 7 + j);
-                String formattedDate = date.format(DateTimeFormatter.ofPattern("dd"));
-                InlineKeyboardButton button = new InlineKeyboardButton();
-                button.setText(formattedDate);
-                button.setCallbackData("date_" + formattedDate);
-                row.add(button);
-            }
-            rows.add(row);
-        }
-
-        inlineKeyboardMarkup.setKeyboard(rows);
-        message.setReplyMarkup(inlineKeyboardMarkup);
-
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void createReminder(String selectedDate, String chatId) {
-        //
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText("Введите текст напоминания для даты " + selectedDate + ":");
-
-//        String remainder = message.getText();
-//        message.setText("Напоминаие : " + remainder + "добавлено для даты " + selectedDate);
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void saveReminder(String reminderText, String selectedDate, String chatId) {
-        // выполнить сохранение напоминания в бд
-//        Reminder reminder = new Reminder(reminderText, selectedDate, chatId);
-//        reminderRepository.save(reminder);
-
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText("Напоминание \"" + reminderText + "\" добавлено для даты " + selectedDate);
-
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-    private void createTask(String selectedDate, String chatId) {
-        //
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-
-        message.setText("Введите описание задачи для даты " + selectedDate + ":");
-        //
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
-    private void createAction(String selectedDate, String chatId) {
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId);
-        message.setText("Выберите действие для даты " + selectedDate + ":");
-
-        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
-        List<List<InlineKeyboardButton>> rows = new ArrayList<>();
-
-        InlineKeyboardButton reminderButton = new InlineKeyboardButton();
-        reminderButton.setText("Добавить напоминание");
-        reminderButton.setCallbackData("action_reminder_" + selectedDate);
-
-        InlineKeyboardButton taskButton = new InlineKeyboardButton();
-        taskButton.setText("Добавить задачу");
-        taskButton.setCallbackData("action_task_" + selectedDate);
-
-        List<InlineKeyboardButton> row1 = new ArrayList<>();
-        row1.add(reminderButton);
-
-        List<InlineKeyboardButton> row2 = new ArrayList<>();
-        row2.add(taskButton);
-
-        rows.add(row1);
-        rows.add(row2);
-
-        inlineKeyboardMarkup.setKeyboard(rows);
-        message.setReplyMarkup(inlineKeyboardMarkup);
 
         try {
             execute(message);

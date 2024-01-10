@@ -1,8 +1,8 @@
 package org.example.service;
 
-import org.example.model.BDManager;
+import org.example.model.db.BDManager;
 import org.example.model.entity.Event;
-import org.example.repository.EventRepository;
+import org.example.model.repository.EventRepository;
 
 import java.util.List;
 

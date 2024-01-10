@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
 @Getter
 @Setter
 @AllArgsConstructor
@@ -13,4 +12,6 @@ import java.time.LocalDate;
 public class Reminder {
     private String date;
     private String text;
+    private Long userId;
+
 }

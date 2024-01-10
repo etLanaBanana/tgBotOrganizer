@@ -1,8 +1,7 @@
-package org.example.model;
+package org.example.model.db;
 
 import lombok.Getter;
-import org.example.model.db.DBConnection;
-import org.example.repository.EventRepository;
+import org.example.model.repository.EventRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
