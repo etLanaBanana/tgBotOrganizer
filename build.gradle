@@ -18,6 +18,10 @@ dependencies {
     implementation 'org.telegram:telegrambots:6.8.0'
     implementation 'org.jsoup:jsoup:1.17.1'
     compileOnly 'org.projectlombok:lombok-maven-plugin:1.18.20.0'
+    implementation 'org.hibernate:hibernate-core:6.4.1.Final'
+    implementation "org.hibernate.orm:hibernate-core"
+    implementation "jakarta.transaction:jakarta.transaction-api"
+
 }
 
 test {

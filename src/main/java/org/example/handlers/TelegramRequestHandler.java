@@ -16,12 +16,12 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import java.util.*;
 
 import static org.example.action.StartAction.startAction;
-import static org.example.keyboards.CalendarCallBack.calendarCallBack;
 import static org.example.keyboards.CalendarKeyboard.sendCalendar;
 
 public class TelegramRequestHandler extends TelegramLongPollingBot {
     private Map<String, List<String>> historyOfMessages = new HashMap<>();
     private ReminderRepository remainderRepository;
+    private String tgUserId;
 
     public void init() throws TelegramApiException {
         this.execute(new SetMyCommands(StartCommands.init(), new BotCommandScopeDefault(), null));
@@ -42,7 +42,7 @@ public class TelegramRequestHandler extends TelegramLongPollingBot {
                 historyOfMessages.put(chatId, chatHistory);
 
                 if (text.startsWith("/start")) {
-                    startAction(chatId);
+                    startAction(chatId, tgUserId);
 
                     if (text.startsWith("/task")) {
                         TaskAction.tackAction(chatId);
