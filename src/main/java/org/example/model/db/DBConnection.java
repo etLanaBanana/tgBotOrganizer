@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 public class DBConnection {
     @Setter
-    private Connection connection;
+    private static Connection connection;
     private Logger logger = LoggerFactory.getLogger(DBConnection.class);
 
     private DBConnection(){
@@ -25,7 +25,7 @@ public class DBConnection {
         }
     }
 
-    public Connection getConnection() {
+    public static Connection getConnection() {
         return connection;
     }
     private static DBConnection instance = null;

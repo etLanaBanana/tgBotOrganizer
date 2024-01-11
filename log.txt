@@ -980,3 +980,19 @@ Caused by: java.net.SocketException: Connection reset
 	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:203)
 	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:258)
 	... 36 more
+2024-01-10 22:27:28,610	ERROR	org.telegram.telegrambots.updatesreceivers.DefaultBotSession$HandlerThread.run(DefaultBotSession.java:317)	Cannot invoke "org.telegram.telegrambots.meta.api.objects.Message.getText()" because the return value of "org.telegram.telegrambots.meta.api.objects.Update.getMessage()" is null
+java.lang.NullPointerException: Cannot invoke "org.telegram.telegrambots.meta.api.objects.Message.getText()" because the return value of "org.telegram.telegrambots.meta.api.objects.Update.getMessage()" is null
+	at org.example.keyboards.CreateRemainderKeyboard.createReminder(CreateRemainderKeyboard.java:29)
+	at org.example.keyboards.CalendarCallBack.calendarCallBack(CalendarCallBack.java:39)
+	at org.example.handlers.TelegramRequestHandler.onUpdateReceived(TelegramRequestHandler.java:69)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.telegram.telegrambots.meta.generics.LongPollingBot.onUpdatesReceived(LongPollingBot.java:27)
+	at org.telegram.telegrambots.updatesreceivers.DefaultBotSession$HandlerThread.run(DefaultBotSession.java:312)
+2024-01-11 21:19:26,893	ERROR	org.telegram.telegrambots.updatesreceivers.DefaultBotSession$HandlerThread.run(DefaultBotSession.java:317)	Cannot invoke "org.telegram.telegrambots.meta.api.objects.Message.getText()" because the return value of "org.telegram.telegrambots.meta.api.objects.Update.getMessage()" is null
+java.lang.NullPointerException: Cannot invoke "org.telegram.telegrambots.meta.api.objects.Message.getText()" because the return value of "org.telegram.telegrambots.meta.api.objects.Update.getMessage()" is null
+	at org.example.keyboards.CreateRemainderKeyboard.createReminder(CreateRemainderKeyboard.java:29)
+	at org.example.keyboards.CalendarCallBack.calendarCallBack(CalendarCallBack.java:39)
+	at org.example.handlers.TelegramRequestHandler.onUpdateReceived(TelegramRequestHandler.java:73)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.telegram.telegrambots.meta.generics.LongPollingBot.onUpdatesReceived(LongPollingBot.java:27)
+	at org.telegram.telegrambots.updatesreceivers.DefaultBotSession$HandlerThread.run(DefaultBotSession.java:312)

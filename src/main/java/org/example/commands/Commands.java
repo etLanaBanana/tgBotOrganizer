@@ -2,6 +2,7 @@ package org.example.commands;
 
 public enum Commands {
     START("/start", "запуск бота"),
+    ACTION("/action", "выбор действия"),
     CALENDAR("/calendar", "календарь"),
     HISTORY("/history", "Получить историю сообщений");
 

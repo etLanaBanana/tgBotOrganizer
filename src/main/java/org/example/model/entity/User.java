@@ -16,15 +16,23 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter
     @Column(name = "tg_user_id")
     private String tgUserId;
 
+    @Setter
     @CreationTimestamp
     @Column(name = "first_entry_date")
     private LocalDateTime firstEntryDate;
 
+    @Id
+    @GeneratedValue
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public void setTgUserId(String tgUserId) {
@@ -33,10 +41,6 @@ public class User {
 
     public void setFirstEntryDate(LocalDateTime firstEntryDate) {
         this.firstEntryDate = firstEntryDate;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public String getTgUserId() {

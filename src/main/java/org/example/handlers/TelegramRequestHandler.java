@@ -4,6 +4,7 @@ import lombok.SneakyThrows;
 import org.example.Configuration;
 import org.example.action.*;
 import org.example.commands.StartCommands;
+import org.example.keyboards.ActionKeyboard;
 import org.example.keyboards.CalendarCallBack;
 import org.example.model.repository.ReminderRepository;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -43,6 +44,9 @@ public class TelegramRequestHandler extends TelegramLongPollingBot {
 
                 if (text.startsWith("/start")) {
                     startAction(chatId, tgUserId);
+
+                } if (text.startsWith("/action")) {
+                    ActionKeyboard.actionKeyboard(chatId);
 
                     if (text.startsWith("/task")) {
                         TaskAction.tackAction(chatId);
